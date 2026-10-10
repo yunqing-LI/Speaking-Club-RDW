@@ -757,7 +757,8 @@ function renderLesson(id){
     </section>`:""}
 
     <section class="block" id="sec-pair">
-      <div class="hint">Вы или Ваш партнёр вытягиваете карточку и задаёте вопрос, затем меняетесь ролями. Карточку может вытягивать только кто-то один из вас.</div>
+      <h3>互相问答 / Вопросы друг другу</h3>
+      <div class="hint">Вы или Ваш партнёр вытягиваете карточку и задаёте вопрос, затем меняетесь ролями. Карточку вытягивает только один из вас.</div>
       <div class="game" id="g-pair" style="box-shadow:none;border:none;padding:0;"></div>
     </section>
   </div>`;
@@ -802,7 +803,7 @@ function mountFlash(box,vocab){
       <span class="flash-count"></span>
       <button class="btn" id="fc-next">下一个 →</button>
     </div>
-    <button class="btn ghost" id="fc-shuffle">打乱顺序</button>
+    <button class="btn ghost" id="fc-shuffle">打乱顺序 / Перемешать карты</button>
   </div>`;
   const card=$("#fc",box);
   function show(){
@@ -824,7 +825,7 @@ function mountFlash(box,vocab){
 function mountMatch(box,pairs,title,sub){
   box.innerHTML=`<h3>${esc(title)}</h3><div class="g-sub">${esc(sub)}</div>
   <div class="match-grid"></div>
-  <div class="quiz-bar"><span class="g-status"></span><button class="btn ghost">重新开始</button></div>`;
+  <div class="quiz-bar"><span class="g-status"></span><button class="btn ghost">重新开始 / Начать заново</button></div>`;
   const grid=$(".match-grid",box),status=$(".g-status",box);
   let sel=null,done=0,startT=null;
   function build(){
@@ -844,7 +845,7 @@ function mountMatch(box,pairs,title,sub){
         if(sel.dataset.key===d.dataset.key){
           sel.classList.remove("sel");sel.classList.add("done");
           d.classList.add("done");sel=null;done++;
-          status.innerHTML=`已配对 <b>${done}</b> / ${use.length}`;
+          status.innerHTML=`已配对 / Найдено пар: <b>${done}</b> / ${use.length}`;
           if(done===use.length){
             const sec=Math.round((Date.now()-startT)/1000);
             status.innerHTML=`全部完成！用时 <b>${sec}</b> 秒。Все пары найдены!`;
@@ -857,7 +858,7 @@ function mountMatch(box,pairs,title,sub){
       };
       grid.appendChild(d);
     });
-    status.innerHTML=`已配对 <b>0</b> / ${use.length}`;
+    status.innerHTML=`已配对 / Найдено пар: <b>0</b> / ${use.length}`;
   }
   $(".btn",box).onclick=build;
   build();
@@ -872,7 +873,7 @@ function mountExtraMatch(box,cfg){
     /* 国家 ↔ 语言 */
     box.innerHTML=`<h3>${esc(cfg.title)}</h3><div class="g-sub">${esc(cfg.sub)}</div>
     <div class="match-grid"></div>
-    <div class="quiz-bar"><span class="g-status"></span><button class="btn ghost">重新开始</button></div>`;
+    <div class="quiz-bar"><span class="g-status"></span><button class="btn ghost">重新开始 / Начать заново</button></div>`;
     const grid=$(".match-grid",box),status=$(".g-status",box);
     let sel=null,done=0;
     function build(){
@@ -891,7 +892,7 @@ function mountExtraMatch(box,cfg){
           if(sel.dataset.key===d.dataset.key){
             sel.classList.remove("sel");sel.classList.add("done");
             d.classList.add("done");sel=null;done++;
-            status.innerHTML=`已配对 <b>${done}</b> / ${cfg.pairs.length}`;
+            status.innerHTML=`已配对 / Найдено пар: <b>${done}</b> / ${cfg.pairs.length}`;
             if(done===cfg.pairs.length)status.innerHTML="全部完成！Отлично!";
           }else{
             d.classList.add("err");sel.classList.add("err");
@@ -901,7 +902,7 @@ function mountExtraMatch(box,cfg){
         };
         grid.appendChild(d);
       });
-      status.innerHTML=`已配对 <b>0</b> / ${cfg.pairs.length}`;
+      status.innerHTML=`已配对 / Найдено пар: <b>0</b> / ${cfg.pairs.length}`;
     }
     $(".btn",box).onclick=build;
     build();
@@ -924,15 +925,15 @@ function mountQuiz(box,vocab){
     if(qi>=qs.length){
       body.innerHTML=`<div class="quiz-q">完成！Викторина окончена!</div>
       <div class="g-status">得分 / Результат：<b style="color:var(--red);font-size:22px;">${score} / ${qs.length}</b></div>
-      <div class="quiz-bar"><span></span><button class="btn">再来一次</button></div>`;
+      <div class="quiz-bar"><span></span><button class="btn">再来一次 / Ещё раз</button></div>`;
       $(".btn",body).onclick=build;return;
     }
     const v=qs[qi];
     const others=shuffle(vocab.filter(x=>x[0]!==v[0])).slice(0,3);
     const opts=shuffle([v,...others]);
-    body.innerHTML=`<div class="quiz-q">“${esc(v[2])}” 用汉语怎么说？</div>
+    body.innerHTML=`<div class="quiz-q">“${esc(v[2])}”</div>
     <div class="quiz-opts">${opts.map(o=>`<button class="quiz-opt" data-k="${esc(o[0])}"><ruby>${esc(o[0])}<rt>${esc(o[1])}</rt></ruby></button>`).join("")}</div>
-    <div class="quiz-bar"><span class="g-status">第 <b>${qi+1}</b> / ${qs.length} 题 · 得分 <b>${score}</b></span></div>`;
+    <div class="quiz-bar"><span class="g-status">第 <b>${qi+1}</b>/${qs.length} 题 · Вопрос <b>${qi+1}</b> из ${qs.length} · 得分/Очки: <b>${score}</b></span></div>`;
     body.querySelectorAll(".quiz-opt").forEach(b=>{
       b.onclick=()=>{
         const ok=b.dataset.k===v[0];
@@ -941,7 +942,7 @@ function mountQuiz(box,vocab){
           if(x.dataset.k===v[0])x.classList.add("right");
         });
         if(ok){score++;}else{b.classList.add("wrong");}
-        $(".g-status",body).innerHTML=`第 <b>${qi+1}</b> / ${qs.length} 题 · 得分 <b>${score}</b> ${ok?"✓ 对了！":"✗ 正确答案："+esc(v[0])}`;
+        $(".g-status",body).innerHTML=`第 <b>${qi+1}</b>/${qs.length} 题 · Вопрос <b>${qi+1}</b> из ${qs.length} · 得分/Очки: <b>${score}</b> ${ok?"✓ 对了！Правильно!":"✗ 正确答案 / Правильный ответ: "+esc(v[0])}`;
         qi++;
         setTimeout(showQ,1100);
       };
@@ -959,7 +960,7 @@ function mountPair(box,questions){
     <div class="ru" id="pair-ru">Нажмите кнопку, чтобы вытянуть карточку</div>
   </div>
   <div class="pair-ctrl">
-    <button class="btn" id="pair-draw">抽题卡 / Вытянуть карту</button>
+    <button class="btn" id="pair-draw">抽题卡 / Вытянуть карточку</button>
     <button class="btn ghost" id="pair-swap">交换角色 / Поменяться</button>
   </div>`;
   let turnA=true,left=shuffle(questions.map((_,i)=>i));
