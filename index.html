@@ -452,6 +452,33 @@ rt{
 .pair-card .who{font-size:13px;letter-spacing:3px;opacity:.8;}
 .pair-ctrl{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
 
+/* 模拟点菜 */
+.order-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start;}
+.order-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.order-item{
+  background:var(--paper);border:1.5px dotted var(--red);border-radius:12px;
+  padding:12px 10px;cursor:pointer;text-align:center;font-family:inherit;color:var(--ink);
+  transition:background .15s,border-color .15s,transform .1s;
+}
+.order-item:hover{border-style:solid;background:var(--paper-warm);}
+.order-item:active{transform:translateY(1px);}
+.order-item.selected{background:var(--red);color:#fff;border-style:solid;}
+.order-item.selected rt,.order-item.selected small{color:#fff;}
+.order-item ruby{font-size:19px;font-weight:700;}
+.order-item small{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:var(--ink-soft);}
+.order-ticket{background:var(--paper-warm);border:1.5px dashed var(--red);border-radius:16px;padding:16px 18px;}
+.order-ticket h4{font-size:16px;color:var(--red-deep);margin-bottom:8px;}
+.order-line{padding:10px 0;border-bottom:1px dashed var(--red-soft);}
+.order-line:last-child{border-bottom:none;}
+.order-line .who{font-size:13px;font-weight:700;color:var(--red-deep);}
+.order-line .pin{font-size:12.5px;line-height:1.3;color:var(--ink-soft);}
+.order-line .zh{font-size:18px;font-weight:650;line-height:1.5;}
+.order-line .ru{font-size:13px;line-height:1.45;color:var(--ink-soft);}
+.order-empty{font-size:14px;color:var(--ink-soft);padding:12px 0;}
+.order-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;}
+.order-actions .g-status{margin-top:0;}
+@media(max-width:760px){.order-layout{grid-template-columns:1fr;}}
+
 /* 视频 */
 .video-box{background:#fff;border:1.5px solid var(--red);padding:18px;box-shadow:8px 8px 0 var(--red-soft);}
 .video-box iframe{width:100%;aspect-ratio:16/9;border:none;background:#000;}
@@ -738,6 +765,20 @@ const LESSONS = [
       ["饺子","jiǎozi","цзяоцзы"],["包子","bāozi","баоцзы"],
       ["鸡蛋","jīdàn","яйцо"],["水果","shuǐguǒ","фрукты"],
       ["面包","miànbāo","хлеб"],["鱼","yú","рыба"],
+    ]
+  },
+  extraGame2:{ after:4, type:"order",
+    title:"模拟点菜 / В ресторане",
+    sub:"选 1–3 道菜，再和伙伴分别扮演服务员和顾客，读对话后交换角色。Выберите 1–3 блюда и разыграйте диалог в парах.",
+    items:[
+      ["米饭","mǐfàn","варёный рис","варёный рис"],
+      ["面条儿","miàntiáor","лапша","лапшу"],
+      ["饺子","jiǎozi","цзяоцзы","цзяоцзы"],
+      ["包子","bāozi","баоцзы","баоцзы"],
+      ["鸡蛋","jīdàn","яйцо","яйцо"],
+      ["鱼","yú","рыба","рыбу"],
+      ["苹果","píngguǒ","яблоко","яблоко"],
+      ["面包","miànbāo","хлеб","хлеб"]
     ]
   }
 },
@@ -1042,6 +1083,7 @@ function renderLesson(id){
   if(L.extraGame2){
     const host=$("#slot-extra2");
     if(L.extraGame2.type==="wheel")mountWheel(host,L.extraGame2);
+    else if(L.extraGame2.type==="order")mountOrder(host,L.extraGame2);
   }
 }
 </script>
@@ -1221,6 +1263,64 @@ function mountQuiz(box,vocab){
     });
   }
   build();
+}
+
+/* --- 模拟点菜（主题5） --- */
+function mountOrder(box,cfg){
+  box.classList.add("game");
+  box.innerHTML=`<h3>${esc(cfg.title)}</h3>
+  <div class="g-sub">${esc(cfg.sub)}</div>
+  <div class="order-layout">
+    <div class="order-menu">${cfg.items.map((it,i)=>`<button class="order-item" data-i="${i}" aria-pressed="false"><ruby>${esc(it[0])}<rt>${esc(it[1])}</rt></ruby><small>${esc(it[2])}</small></button>`).join("")}</div>
+    <div class="order-ticket"><h4>点菜单与对话 / Заказ и диалог</h4><div class="order-lines"></div></div>
+  </div>
+  <div class="order-actions"><span class="g-status" role="status"></span><button class="btn ghost order-clear">清空重选 / Начать заново</button></div>`;
+  const lines=$(".order-lines",box),status=$(".g-status",box);
+  let selected=[];
+  function joinWords(words,conj,sep){
+    if(words.length<2)return words[0]||"";
+    return words.slice(0,-1).join(words.length===2?"":sep)+conj+words[words.length-1];
+  }
+  function show(){
+    box.querySelectorAll(".order-item").forEach(b=>{
+      const on=selected.includes(+b.dataset.i);
+      b.classList.toggle("selected",on);
+      b.setAttribute("aria-pressed",String(on));
+    });
+    if(!selected.length){
+      lines.innerHTML=`<div class="order-empty">请先选菜，再开始对话。<br>Сначала выберите блюда, затем разыграйте диалог.</div>`;
+      status.textContent="可以选 1–3 道菜 / Можно выбрать 1–3 блюда";
+      return;
+    }
+    const items=selected.map(i=>cfg.items[i]);
+    const zh=joinWords(items.map(it=>it[0]),"和","、");
+    const pin=joinWords(items.map(it=>it[1])," hé ",", ");
+    const ru=joinWords(items.map(it=>it[3])," и ",", ");
+    lines.innerHTML=`<div class="order-line">
+      <div class="who">服务员 / Официант</div><div class="pin">Nǐ hǎo! Nǐ xiǎng chī shénme?</div>
+      <div class="zh">你好！你想吃什么？</div><div class="ru">Здравствуйте! Что Вы хотите?</div>
+    </div>
+    <div class="order-line">
+      <div class="who">顾客 / Гость</div><div class="pin">Nǐ hǎo! Wǒ yào ${esc(pin)}.</div>
+      <div class="zh">你好！我要${esc(zh)}。</div><div class="ru">Здравствуйте! Я хочу ${esc(ru)}.</div>
+    </div>
+    <div class="order-line">
+      <div class="who">服务员 / Официант</div><div class="pin">Hǎo de!</div>
+      <div class="zh">好的！</div><div class="ru">Хорошо!</div>
+    </div>`;
+    status.textContent=`已选 ${selected.length} 道菜 / Выбрано: ${selected.length}`;
+  }
+  box.querySelectorAll(".order-item").forEach(b=>{
+    b.onclick=()=>{
+      const i=+b.dataset.i;
+      if(selected.includes(i))selected=selected.filter(x=>x!==i);
+      else if(selected.length<3)selected.push(i);
+      else{status.textContent="最多选 3 道菜 / Можно выбрать не более 3 блюд";return;}
+      show();
+    };
+  });
+  $(".order-clear",box).onclick=()=>{selected=[];show();};
+  show();
 }
 
 /* --- 两人互问抽题卡 --- */
